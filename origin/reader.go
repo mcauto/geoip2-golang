@@ -5,12 +5,11 @@
 // the data in the MaxMind databases.
 //
 // See github.com/oschwald/maxminddb-golang for more advanced used cases.
-package geoip2
+package origin
 
 import (
 	"fmt"
 	"net"
-	"sync"
 
 	"github.com/oschwald/maxminddb-golang"
 )
@@ -310,8 +309,6 @@ func getDBType(reader *maxminddb.Reader) (databaseType, error) {
 	}
 }
 
-var enterprisePool = sync.Pool{New: func() interface{} { return &Enterprise{} }}
-
 // Enterprise takes an IP address as a net.IP struct and returns an Enterprise
 // struct and/or an error. This is intended to be used with the GeoIP2
 // Enterprise database.
@@ -319,13 +316,10 @@ func (r *Reader) Enterprise(ipAddress net.IP) (*Enterprise, error) {
 	if isEnterprise&r.databaseType == 0 {
 		return nil, InvalidMethodError{"Enterprise", r.Metadata().DatabaseType}
 	}
-	enterprise := enterprisePool.Get().(*Enterprise)
-	defer enterprisePool.Put(enterprise)
-	err := r.mmdbReader.Lookup(ipAddress, enterprise)
-	return enterprise, err
+	var enterprise Enterprise
+	err := r.mmdbReader.Lookup(ipAddress, &enterprise)
+	return &enterprise, err
 }
-
-var cityPool = sync.Pool{New: func() interface{} { return &City{} }}
 
 // City takes an IP address as a net.IP struct and returns a City struct
 // and/or an error. Although this can be used with other databases, this
@@ -334,13 +328,10 @@ func (r *Reader) City(ipAddress net.IP) (*City, error) {
 	if isCity&r.databaseType == 0 {
 		return nil, InvalidMethodError{"City", r.Metadata().DatabaseType}
 	}
-	city := cityPool.Get().(*City)
-	defer cityPool.Put(city)
-	err := r.mmdbReader.Lookup(ipAddress, city)
-	return city, err
+	var city City
+	err := r.mmdbReader.Lookup(ipAddress, &city)
+	return &city, err
 }
-
-var countryPool = sync.Pool{New: func() interface{} { return &Country{} }}
 
 // Country takes an IP address as a net.IP struct and returns a Country struct
 // and/or an error. Although this can be used with other databases, this
@@ -350,13 +341,10 @@ func (r *Reader) Country(ipAddress net.IP) (*Country, error) {
 	if isCountry&r.databaseType == 0 {
 		return nil, InvalidMethodError{"Country", r.Metadata().DatabaseType}
 	}
-	country := countryPool.Get().(*Country)
-	defer countryPool.Put(country)
-	err := r.mmdbReader.Lookup(ipAddress, country)
-	return country, err
+	var country Country
+	err := r.mmdbReader.Lookup(ipAddress, &country)
+	return &country, err
 }
-
-var anonymousIPPool = sync.Pool{New: func() interface{} { return &AnonymousIP{} }}
 
 // AnonymousIP takes an IP address as a net.IP struct and returns a
 // AnonymousIP struct and/or an error.
@@ -364,13 +352,10 @@ func (r *Reader) AnonymousIP(ipAddress net.IP) (*AnonymousIP, error) {
 	if isAnonymousIP&r.databaseType == 0 {
 		return nil, InvalidMethodError{"AnonymousIP", r.Metadata().DatabaseType}
 	}
-	anonIP := anonymousIPPool.Get().(*AnonymousIP)
-	defer anonymousIPPool.Put(anonIP)
-	err := r.mmdbReader.Lookup(ipAddress, anonIP)
-	return anonIP, err
+	var anonIP AnonymousIP
+	err := r.mmdbReader.Lookup(ipAddress, &anonIP)
+	return &anonIP, err
 }
-
-var asnPool = sync.Pool{New: func() interface{} { return &ASN{} }}
 
 // ASN takes an IP address as a net.IP struct and returns a ASN struct and/or
 // an error
@@ -378,13 +363,10 @@ func (r *Reader) ASN(ipAddress net.IP) (*ASN, error) {
 	if isASN&r.databaseType == 0 {
 		return nil, InvalidMethodError{"ASN", r.Metadata().DatabaseType}
 	}
-	val := asnPool.Get().(*ASN)
-	defer asnPool.Put(val)
-	err := r.mmdbReader.Lookup(ipAddress, val)
-	return val, err
+	var val ASN
+	err := r.mmdbReader.Lookup(ipAddress, &val)
+	return &val, err
 }
-
-var connTypePool = sync.Pool{New: func() interface{} { return &ConnectionType{} }}
 
 // ConnectionType takes an IP address as a net.IP struct and returns a
 // ConnectionType struct and/or an error
@@ -392,13 +374,10 @@ func (r *Reader) ConnectionType(ipAddress net.IP) (*ConnectionType, error) {
 	if isConnectionType&r.databaseType == 0 {
 		return nil, InvalidMethodError{"ConnectionType", r.Metadata().DatabaseType}
 	}
-	val := connTypePool.Get().(*ConnectionType)
-	defer connTypePool.Put(val)
-	err := r.mmdbReader.Lookup(ipAddress, val)
-	return val, err
+	var val ConnectionType
+	err := r.mmdbReader.Lookup(ipAddress, &val)
+	return &val, err
 }
-
-var domainPool = sync.Pool{New: func() interface{} { return &Domain{} }}
 
 // Domain takes an IP address as a net.IP struct and returns a
 // Domain struct and/or an error
@@ -406,13 +385,10 @@ func (r *Reader) Domain(ipAddress net.IP) (*Domain, error) {
 	if isDomain&r.databaseType == 0 {
 		return nil, InvalidMethodError{"Domain", r.Metadata().DatabaseType}
 	}
-	val := domainPool.Get().(*Domain)
-	defer domainPool.Put(val)
-	err := r.mmdbReader.Lookup(ipAddress, val)
-	return val, err
+	var val Domain
+	err := r.mmdbReader.Lookup(ipAddress, &val)
+	return &val, err
 }
-
-var ispPool = sync.Pool{New: func() interface{} { return &ISP{} }}
 
 // ISP takes an IP address as a net.IP struct and returns a ISP struct and/or
 // an error
@@ -420,10 +396,9 @@ func (r *Reader) ISP(ipAddress net.IP) (*ISP, error) {
 	if isISP&r.databaseType == 0 {
 		return nil, InvalidMethodError{"ISP", r.Metadata().DatabaseType}
 	}
-	val := ispPool.Get().(*ISP)
-	defer ispPool.Put(val)
-	err := r.mmdbReader.Lookup(ipAddress, val)
-	return val, err
+	var val ISP
+	err := r.mmdbReader.Lookup(ipAddress, &val)
+	return &val, err
 }
 
 // Metadata takes no arguments and returns a struct containing metadata about
